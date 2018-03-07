@@ -1,10 +1,14 @@
 FROM golang:alpine
 WORKDIR /go/src/app
 COPY . .
+RUN echo "ciao"
 RUN mkdir dumpdb
 RUN apk add --no-cache git \
     && go get github.com/robfig/cron \
     && apk del git
 RUN go build backup.go
-RUN ls -la
+# install mysqldump
+RUN apk update \
+    && apk add mysql-client
+RUN chmod +x cron_script.sh
 CMD ["./backup"]

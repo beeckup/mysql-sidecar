@@ -24,10 +24,10 @@ func main() {
 	}
 	// Close the listener when the application closes.
 	defer l.Close()
-	fmt.Println("Ascolto inutilemente alla porta " + CONN_PORT)
+	fmt.Println("Ascolto inutilmente alla porta " + CONN_PORT)
 
 	c := cron.New()
-	c.AddFunc(os.Getenv("SCHEDULE"), func() { fmt.Println("Sono un cron e giro ogni "+os.Getenv("TEMPISTICA")) })
+	c.AddFunc(os.Getenv("SCHEDULE"), func() { fmt.Println("Sono un cron e giro ogni "+os.Getenv("SCHEDULE")) })
 	c.AddFunc(os.Getenv("SCHEDULE"), func() { exe_cmd("./cron_script.sh") })
 	c.Start()
 
@@ -71,6 +71,7 @@ func handleRequest(conn net.Conn) {
 }
 
 func exe_cmd(cmd string) {
+
 	out, err := exec.Command("sh","-c",cmd).Output()
 	if err != nil {
 		fmt.Printf("%s", err)

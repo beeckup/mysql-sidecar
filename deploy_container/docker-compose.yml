@@ -6,8 +6,15 @@ services:
           - ./dumpdb:/go/src/app/dumpdb
       restart: always
       environment:
+        - MYSQL_HOST=db
         - MYSQL_DATABASE=wordpress
         - MYSQL_USER=root
-        - MYSQL_PASSWORD=root
-        - MYSQL_SQL_FILENAME=root
-        - SCHEDULE="* * * * * *"
+        - MYSQL_PASSWORD=123456
+        - MYSQL_SQL_FILENAME=nomebackup
+        - SCHEDULE=0 * * * * *
+  db:
+      image: mysql:latest
+      restart: always
+      environment:
+        MYSQL_DATABASE: wordpress
+        MYSQL_ROOT_PASSWORD: 123456
