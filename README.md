@@ -1,10 +1,8 @@
 # Sidecar Backup Mysql
 
-Container attachabile ad altre soluzioni per effettuare il backup del db mysql
+Check ```deploy_container/docker-compose.yml```
 
-TODO : Aggiungere la possibilità di caricare il backup in un datastore S3
-
-Il cron è in questo formato
+Tip on ```SCHEDULE``` enviroment variable:
 
 Field name   | Mandatory? | Allowed values  | Allowed special characters
 ----------   | ---------- | --------------  | --------------------------
