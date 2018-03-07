@@ -1,0 +1,13 @@
+version: '2'
+services:
+  sidecar-backup-mysql:
+      image: nutellinoit/sidecar-backup-mysql:1.0
+      volumes:
+          - ./dumpdb:/go/src/app/dumpdb
+      restart: always
+      environment:
+        - MYSQL_DATABASE=wordpress
+        - MYSQL_USER=root
+        - MYSQL_PASSWORD=root
+        - MYSQL_SQL_FILENAME=root
+        - SCHEDULE="* * * * * *"
