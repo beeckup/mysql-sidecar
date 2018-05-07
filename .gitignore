@@ -50,5 +50,5 @@ fabric.properties
 /build_container/cron_script.sh
 /deploy_sidecar_example/minio_storage/*
 
-#/deploy_sidecar_example/.env
+/deploy_sidecar_example/.env
 /build/*
