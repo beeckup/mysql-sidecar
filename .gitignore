@@ -66,3 +66,7 @@ fabric.properties
 
 /build_container/backup.go
 /build_container/cron_script.sh
+/minio_storage/*
+
+/deploy_container/.env
+/build/*
