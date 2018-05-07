@@ -18,26 +18,28 @@ services:
         - S3_SECRET=${S3_SECRET}
         - S3_HOST=${S3_HOST}
         - S3_PROTOCOL=${S3_PROTOCOL}
-
+##################
+##### example db
   db:
       image: mysql:latest
       restart: always
       environment:
         MYSQL_DATABASE: wordpress
         MYSQL_ROOT_PASSWORD: 123456
-
+###################
+##### example minio install
   minio:
     image: minio/minio
     ports:
        - "${MINIO_PORT}:9000"
     volumes:
-      - ../minio_storage:/data
+      - ./minio_storage:/data
     environment:
       - MINIO_ACCESS_KEY=${S3_KEY}
       - MINIO_SECRET_KEY=${S3_SECRET}
     command: minio server /data
 ####################
-##### container to create a new bucket if doesn't exist
+##### example container to create a new bucket if doesn't exist
   createbuckets:
     image: minio/mc
     depends_on:
