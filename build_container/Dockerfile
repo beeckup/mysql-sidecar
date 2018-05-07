@@ -9,6 +9,7 @@ RUN apk add --no-cache git \
 RUN go build backup.go
 # install mysqldump
 RUN apk update \
-    && apk add mysql-client
+    && apk add mysql-client \
+    && apk add --no-cache openssl curl
 RUN chmod +x cron_script.sh
 CMD ["./backup"]

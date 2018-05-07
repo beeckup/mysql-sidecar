@@ -12,3 +12,13 @@ Hours        | Yes        | 0-23            | * / , -
 Day of month | Yes        | 1-31            | * / , - ?
 Month        | Yes        | 1-12 or JAN-DEC | * / , -
 Day of week  | Yes        | 0-6 or SUN-SAT  | * / , - ?
+
+
+
+## Minio/S3 config
+
+In deploy_container copy env.sample as .env
+
+Make you changes 
+
+Start containers! :)
