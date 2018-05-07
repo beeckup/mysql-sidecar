@@ -1,7 +1,6 @@
 FROM golang:alpine
 WORKDIR /go/src/app
 COPY . .
-RUN echo "ciao"
 RUN mkdir dumpdb
 RUN apk add --no-cache git \
     && go get github.com/robfig/cron \
