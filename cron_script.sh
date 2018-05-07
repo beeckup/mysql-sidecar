@@ -36,6 +36,7 @@ date=`date -R`
 _signature="PUT\n\n${content_type}\n${date}\n${resource}"
 signature=`echo -en ${_signature} | openssl sha1 -hmac ${s3_secret} -binary | base64`
 echo "Eseguo curl"
+echo "Upload di ${_file}"
 curl -v -X PUT -T "${_file}" \
           -H "Host: $host" \
           -H "Date: ${date}" \

@@ -19,15 +19,15 @@ func main() {
 	// Listen for incoming connections.
 	l, err := net.Listen(CONN_TYPE, ":"+CONN_PORT)
 	if err != nil {
-		fmt.Println("Non riesco a bindarmi! ", err.Error())
+		fmt.Println("Cannot bind! ", err.Error())
 		os.Exit(1)
 	}
 	// Close the listener when the application closes.
 	defer l.Close()
-	fmt.Println("Ascolto inutilmente alla porta " + CONN_PORT)
+	fmt.Println("Useless listen " + CONN_PORT)
 
 	c := cron.New()
-	c.AddFunc(os.Getenv("SCHEDULE"), func() { fmt.Println("Sono un cron e giro ogni "+os.Getenv("SCHEDULE")) })
+	c.AddFunc(os.Getenv("SCHEDULE"), func() { fmt.Println("Cron schedule: "+os.Getenv("SCHEDULE")) })
 	c.AddFunc(os.Getenv("SCHEDULE"), func() { exe_cmd("./cron_script.sh") })
 	c.Start()
 

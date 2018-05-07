@@ -24,9 +24,11 @@ services:
   db:
       image: mysql:latest
       restart: always
+      ports:
+        - "3306:3306" #only test
       environment:
-        MYSQL_DATABASE: wordpress
-        MYSQL_ROOT_PASSWORD: 123456
+        MYSQL_DATABASE: ${MYSQL_DATABASE}
+        MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
 ###################
 ##### example minio install
   minio:
@@ -47,6 +49,7 @@ services:
       - minio
     entrypoint: >
       /bin/sh -c "
+      sleep 20;
       /usr/bin/mc config host add custom_instance ${S3_PROTOCOL}://${S3_HOST} ${S3_KEY} ${S3_SECRET};
       /usr/bin/mc rm -r --force custom_instance/${S3_BUCKET};
       /usr/bin/mc mb custom_instance/${S3_BUCKET};
