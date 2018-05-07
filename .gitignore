@@ -45,3 +45,8 @@ fabric.properties
 
 /build_container/backup.go
 /build_container/cron_script.sh
+/deploy_sidecar_example/minio_storage/*
+
+/deploy_sidecar_example/.env
+/build/*
+/deploy_sidecar_example/dumpdb/

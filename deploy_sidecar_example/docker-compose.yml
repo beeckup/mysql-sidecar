@@ -1,0 +1,58 @@
+version: '2'
+services:
+  sidecar-backup-mysql:
+      image: nutellinoit/sidecar-backup-mysql:2.0
+      volumes:
+          - ./dumpdb:/go/src/app/dumpdb
+      restart: always
+      environment:
+        - MYSQL_HOST=${MYSQL_HOST}
+        - MYSQL_DATABASE=${MYSQL_DATABASE}
+        - MYSQL_USER=${MYSQL_USER}
+        - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+        - MYSQL_SQL_FILENAME=${MYSQL_SQL_FILENAME}
+        - SCHEDULE=${SCHEDULE}
+        - S3_UPLOAD=${S3_UPLOAD}
+        - S3_BUCKET=${S3_BUCKET}
+        - S3_KEY=${S3_KEY}
+        - S3_SECRET=${S3_SECRET}
+        - S3_HOST=${S3_HOST}
+        - S3_PROTOCOL=${S3_PROTOCOL}
+        - ZIP_FILE=${ZIP_FILE}
+##################
+##### example db
+  db:
+      image: mysql:latest
+      restart: always
+      ports:
+        - "3306:3306" #only test
+      environment:
+        MYSQL_DATABASE: ${MYSQL_DATABASE}
+        MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
+###################
+##### example minio install
+  minio:
+    image: minio/minio
+    ports:
+       - "${MINIO_PORT}:9000"
+    volumes:
+      - ./minio_storage:/data
+    environment:
+      - MINIO_ACCESS_KEY=${S3_KEY}
+      - MINIO_SECRET_KEY=${S3_SECRET}
+    command: minio server /data
+####################
+##### example container to create a new bucket if doesn't exist
+  createbuckets:
+    image: minio/mc
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      sleep 20;
+      /usr/bin/mc config host add custom_instance ${S3_PROTOCOL}://${S3_HOST} ${S3_KEY} ${S3_SECRET};
+      /usr/bin/mc rm -r --force custom_instance/${S3_BUCKET};
+      /usr/bin/mc mb custom_instance/${S3_BUCKET};
+       /usr/bin/mc policy download custom_instance/${S3_BUCKET};
+      exit 0;
+      "
