@@ -1,50 +1,176 @@
 #!/bin/sh
 
+echo "Process starting..."
 
 _now=$(date +"%s_%m_%d_%Y")
-_file="dumpdb/$MYSQL_SQL_FILENAME_$_now.sql"
+
+_name=$MYSQL_SQL_FILENAME"_"$_now"_"
+
+_file_for_start="dumpdb/$_name"
+
+_file="dumpdb/$_name.sql"
 
 echo $_file
 
-mysqldump  "$MYSQL_DATABASE" -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" -h "$MYSQL_HOST" > $_file
 
-if [ "$ZIP_FILE" = "true" ]; then
-    echo "Compress..."
-    tar -cvzf dumpdb/$MYSQL_SQL_FILENAME_$_now.tar.gz $_file
-    rm $_file
-    _file=dumpdb/$MYSQL_SQL_FILENAME_$_now.tar.gz
+if [ "$MYSQL_ALL_DB" = "true" ]; then
+
+    echo "Dumping all dbs"
+
+    mysql -h "$MYSQL_HOST" -N -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" -e 'show databases' > todo.txt
+
+    while read dbname; do
+        mysqldump --single-transaction=TRUE -h "$MYSQL_HOST" -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" --complete-insert  "$dbname" > "$_file_for_start$dbname"_bck_`date +%Y%m%d`.sql;
+
+        echo "dumping $dbname database..."
+
+        if [ "$ZIP_FILE" = "true" ]; then
+
+
+          echo "Compress $dbname database...";
+          tar -cvzf "$_file_for_start$dbname"_bck_`date +%Y%m%d`.tar.gz "$_file_for_start$dbname"_bck_`date +%Y%m%d`.sql;
+          rm "$_file_for_start$dbname"_bck_`date +%Y%m%d`.sql
+
+          _file="$_file_for_start$dbname"_bck_`date +%Y%m%d`.tar.gz
+
+          if [ "$S3_UPLOAD" = "true" ]; then
+
+
+
+            echo "S3 upload $dbname database ($_file)..."
+
+            bucket="$S3_BUCKET"
+
+            host="$S3_HOST"
+            link="$S3_PROTOCOL""://""$S3_HOST"
+
+            echo "$link"
+
+            s3_key="$S3_KEY"
+            s3_secret="$S3_SECRET"
+
+            resource="/${bucket}/${_file}"
+            content_type="application/octet-stream"
+            date=`date -R`
+            _signature="PUT\n\n${content_type}\n${date}\n${resource}"
+            signature=`echo -en ${_signature} | openssl sha1 -hmac ${s3_secret} -binary | base64`
+            echo "Eseguo curl"
+            echo "Upload di ${_file}"
+            curl -v -X PUT -T "${_file}" \
+                      -H "Host: $host" \
+                      -H "Date: ${date}" \
+                      -H "Content-Type: ${content_type}" \
+                      -H "Authorization: AWS ${s3_key}:${signature}" \
+                       $link${resource}
+
+            echo "Removing temp file $dbname $_file"
+
+            rm $_file
+
+
+          fi
+
+
+        else
+
+          _file="$_file_for_start$dbname"_bck_`date +%Y%m%d`.sql;
+
+          if [ "$S3_UPLOAD" = "true" ]; then
+
+
+
+            echo "S3 upload $dbname database ($_file)..."
+
+            bucket="$S3_BUCKET"
+
+            host="$S3_HOST"
+            link="$S3_PROTOCOL""://""$S3_HOST"
+
+            echo "$link"
+
+            s3_key="$S3_KEY"
+            s3_secret="$S3_SECRET"
+
+            resource="/${bucket}/${_file}"
+            content_type="application/octet-stream"
+            date=`date -R`
+            _signature="PUT\n\n${content_type}\n${date}\n${resource}"
+            signature=`echo -en ${_signature} | openssl sha1 -hmac ${s3_secret} -binary | base64`
+            echo "Eseguo curl"
+            echo "Upload di ${_file}"
+            curl -v -X PUT -T "${_file}" \
+                      -H "Host: $host" \
+                      -H "Date: ${date}" \
+                      -H "Content-Type: ${content_type}" \
+                      -H "Authorization: AWS ${s3_key}:${signature}" \
+                       $link${resource}
+
+            echo "Removing temp file $dbname ($_file)"
+
+            rm $_file
+
+
+          fi
+
+        fi
+
+    done < todo.txt
+
 
 fi
 
 
-if [ "$S3_UPLOAD" = "true" ]; then
-echo "S3 upload..."
 
-bucket="$S3_BUCKET"
+if [ "$MYSQL_ALL_DB" = "" ]; then
 
-host="$S3_HOST"
-link="$S3_PROTOCOL""://""$S3_HOST"
+    echo "Dumping $MYSQL_DATABASE mysql database..."
 
-echo "$link"
+    mysqldump  "$MYSQL_DATABASE" -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" -h "$MYSQL_HOST" > $_file
 
-s3_key="$S3_KEY"
-s3_secret="$S3_SECRET"
+    if [ "$ZIP_FILE" = "true" ]; then
+        echo "Compress $MYSQL_DATABASE mysql database..."
+        tar -cvzf dumpdb/$MYSQL_SQL_FILENAME_$_now.tar.gz $_file
+        rm $_file
+        _file=dumpdb/$MYSQL_SQL_FILENAME_$_now.tar.gz
 
-resource="/${bucket}/${_file}"
-content_type="application/octet-stream"
-date=`date -R`
-_signature="PUT\n\n${content_type}\n${date}\n${resource}"
-signature=`echo -en ${_signature} | openssl sha1 -hmac ${s3_secret} -binary | base64`
-echo "Eseguo curl"
-echo "Upload di ${_file}"
-curl -v -X PUT -T "${_file}" \
-          -H "Host: $host" \
-          -H "Date: ${date}" \
-          -H "Content-Type: ${content_type}" \
-          -H "Authorization: AWS ${s3_key}:${signature}" \
-           $link${resource}
+    fi
 
-rm $_file
 
+    if [ "$S3_UPLOAD" = "true" ] && [ "$MYSQL_ALL_DB" = "" ]; then
+
+
+
+        echo "S3 upload $MYSQL_DATABASE database ($_file) ..."
+
+        bucket="$S3_BUCKET"
+
+        host="$S3_HOST"
+        link="$S3_PROTOCOL""://""$S3_HOST"
+
+        echo "$link"
+
+        s3_key="$S3_KEY"
+        s3_secret="$S3_SECRET"
+
+        resource="/${bucket}/${_file}"
+        content_type="application/octet-stream"
+        date=`date -R`
+        _signature="PUT\n\n${content_type}\n${date}\n${resource}"
+        signature=`echo -en ${_signature} | openssl sha1 -hmac ${s3_secret} -binary | base64`
+        echo "Eseguo curl"
+        echo "Upload di ${_file}"
+        curl -v -X PUT -T "${_file}" \
+                  -H "Host: $host" \
+                  -H "Date: ${date}" \
+                  -H "Content-Type: ${content_type}" \
+                  -H "Authorization: AWS ${s3_key}:${signature}" \
+                   $link${resource}
+        echo "Removing temp file of $MYSQL_DATABASE database ($_file)"
+
+        rm $_file
+
+    fi
 
 fi
+
+

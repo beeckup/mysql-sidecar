@@ -1,7 +1,7 @@
 version: '2'
 services:
   sidecar-backup-mysql:
-      image: nutellinoit/sidecar-backup-mysql:2.0
+      image: nutellinoit/sidecar-backup-mysql:2.5
       volumes:
           - ./dumpdb:/go/src/app/dumpdb
       restart: always
@@ -19,10 +19,11 @@ services:
         - S3_HOST=${S3_HOST}
         - S3_PROTOCOL=${S3_PROTOCOL}
         - ZIP_FILE=${ZIP_FILE}
+        - MYSQL_ALL_DB=${MYSQL_ALL_DB}
 ##################
 ##### example db
   db:
-      image: mysql:latest
+      image: mysql:5.7.22
       restart: always
       ports:
         - "3306:3306" #only test
