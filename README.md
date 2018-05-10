@@ -41,3 +41,72 @@ S3_PROTOCOL | protocol type | `http` or `https`
 S3_KEY | key | string
 S3_SECRET | secret | string
 MINIO_PORT | local minio port to expose on host | port number
+
+# Usage
+
+Create `.env` file:
+
+```bash
+### db connection
+MYSQL_HOST=db
+MYSQL_DATABASE=wordpress
+MYSQL_USER=root
+MYSQL_PASSWORD=123456
+MYSQL_SQL_FILENAME=nomebackup
+### cron schedule
+SCHEDULE=0 * * * * *
+
+### PUT S3_UPLOAD to true to upload your dump on s3 or minio bucket
+S3_UPLOAD=true
+### S3 or minio host
+S3_HOST=minio:9000
+### Protocol
+S3_PROTOCOL=http
+### Your bucket name
+S3_BUCKET=cicciopollo
+### minio or s3 credentials
+S3_KEY=85A8U57ZITLSLFBYKNCG
+S3_SECRET=14MAuAetrv7y3E6zAuUOimXy5KYRqrZKw3cWuEe/
+### port of local minio
+MINIO_PORT=9000
+
+### ZIP FILE
+ZIP_FILE=true
+
+### ALL DB , true to enable
+MYSQL_ALL_DB=
+```
+
+Create `docker-compose.yml` file:
+
+```yml
+version: '2'
+services:
+  sidecar-backup-mysql:
+      image: nutellinoit/sidecar-backup-mysql:2.6
+      volumes:
+          - ./dumpdb:/go/src/app/dumpdb
+      restart: always
+      environment:
+        - MYSQL_HOST=${MYSQL_HOST}
+        - MYSQL_DATABASE=${MYSQL_DATABASE}
+        - MYSQL_USER=${MYSQL_USER}
+        - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+        - MYSQL_SQL_FILENAME=${MYSQL_SQL_FILENAME}
+        - SCHEDULE=${SCHEDULE}
+        - S3_UPLOAD=${S3_UPLOAD}
+        - S3_BUCKET=${S3_BUCKET}
+        - S3_KEY=${S3_KEY}
+        - S3_SECRET=${S3_SECRET}
+        - S3_HOST=${S3_HOST}
+        - S3_PROTOCOL=${S3_PROTOCOL}
+        - ZIP_FILE=${ZIP_FILE}
+        - MYSQL_ALL_DB=${MYSQL_ALL_DB}
+
+```
+
+Launch with
+
+```bash
+docker-compose up -d
+```
