@@ -1,7 +1,7 @@
 version: '2'
 services:
   sidecar-backup-mysql:
-      image: nutellinoit/sidecar-backup-mysql:2.5
+      image: nutellinoit/sidecar-backup-mysql:2.6
       volumes:
           - ./dumpdb:/go/src/app/dumpdb
       restart: always

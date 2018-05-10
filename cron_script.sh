@@ -129,9 +129,9 @@ if [ "$MYSQL_ALL_DB" = "" ]; then
 
     if [ "$ZIP_FILE" = "true" ]; then
         echo "Compress $MYSQL_DATABASE mysql database..."
-        tar -cvzf dumpdb/$MYSQL_SQL_FILENAME_$_now.tar.gz $_file
+        tar -cvzf "dumpdb/"$_name".tar.gz" $_file
         rm $_file
-        _file=dumpdb/$MYSQL_SQL_FILENAME_$_now.tar.gz
+        _file="dumpdb/"$_name".tar.gz"
 
     fi
 
