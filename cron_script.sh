@@ -33,7 +33,7 @@ if [ "$MYSQL_ALL_DB" = "true" ]; then
 
           _file="$_file_for_start$dbname"_bck_`date +%Y%m%d`.tar.gz
 
-          if [ "$S3_UPLOAD" = "true" ] && [ "$MYSQL_ALL_DB" = "true" ]; then
+          if [ "$S3_UPLOAD" = "true" ]; then
 
 
 
@@ -75,7 +75,7 @@ if [ "$MYSQL_ALL_DB" = "true" ]; then
 
           _file="$_file_for_start$dbname"_bck_`date +%Y%m%d`.sql;
 
-          if [ "$S3_UPLOAD" = "true" and "$MYSQL_ALL_DB" = "true" ]; then
+          if [ "$S3_UPLOAD" = "true" ]; then
 
 
 

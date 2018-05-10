@@ -11,6 +11,7 @@ MYSQL_DATABASE | database name | string
 MYSQL_USER | database user | string
 MYSQL_PASSWORD | database password | string
 MYSQL_SQL_FILENAME | filename backup | string
+MYSQL_ALL_DB | cycle all database and backups single file each | `true` or empty
 SCHEDULE | see below | 
 ZIP_FILE | true to enable tar.gz compression | `true` or empty
 
