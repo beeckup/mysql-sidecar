@@ -83,7 +83,7 @@ Create `docker-compose.yml` file:
 version: '2'
 services:
   sidecar-backup-mysql:
-      image: nutellinoit/sidecar-backup-mysql:2.6
+      image: nutellinoit/sidecar-backup-mysql:2.7
       volumes:
           - ./dumpdb:/go/src/app/dumpdb
       restart: always

@@ -20,7 +20,7 @@ if [ "$MYSQL_ALL_DB" = "true" ]; then
     mysql -h "$MYSQL_HOST" -N -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" -e 'show databases' > todo.txt
 
     while read dbname; do
-        mysqldump --single-transaction=TRUE -h "$MYSQL_HOST" -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" --complete-insert  "$dbname" > "$_file_for_start$dbname"_bck_`date +%Y%m%d`.sql;
+        mysqldump --single-transaction=TRUE -h "$MYSQL_HOST" -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" --max_allowed_packet=3000M --complete-insert  "$dbname" > "$_file_for_start$dbname"_bck_`date +%Y%m%d`.sql;
 
         echo "dumping $dbname database..."
 
@@ -125,7 +125,7 @@ if [ "$MYSQL_ALL_DB" = "" ]; then
 
     echo "Dumping $MYSQL_DATABASE mysql database..."
 
-    mysqldump  "$MYSQL_DATABASE" -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" -h "$MYSQL_HOST" > $_file
+    mysqldump  "$MYSQL_DATABASE" -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" -h "$MYSQL_HOST" --max_allowed_packet=3000M --complete-insert > $_file
 
     if [ "$ZIP_FILE" = "true" ]; then
         echo "Compress $MYSQL_DATABASE mysql database..."
