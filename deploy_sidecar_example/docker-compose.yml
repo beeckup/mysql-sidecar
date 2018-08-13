@@ -1,7 +1,7 @@
 version: '2'
 services:
   sidecar-backup-mysql:
-      image: nutellinoit/sidecar-backup-mysql:2.7
+      image: nutellinoit/sidecar-backup-mysql:latest
       volumes:
           - ./dumpdb:/go/src/app/dumpdb
       restart: always
@@ -43,7 +43,7 @@ services:
       - MINIO_SECRET_KEY=${S3_SECRET}
     command: minio server /data
 ####################
-##### example container to create a new bucket if doesn't exist
+##### example init container to create a new bucket if doesn't exist
   createbuckets:
     image: minio/mc
     depends_on:
