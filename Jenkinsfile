@@ -22,4 +22,16 @@ node {
             app.push("${env.BUILD_NUMBER}")
         }
     }
+
+    stage('Build image Beekup') {
+            app = docker.build("beeckup/sidecar-backup-mysql","--pull build_container/")
+        }
+
+
+    stage('Push image Beekup') {
+        docker.withRegistry('https://registry.hub.docker.com', 'docker-hub-credentials') {
+            app.push("latest")
+            app.push("${env.BUILD_NUMBER}")
+        }
+    }
 }

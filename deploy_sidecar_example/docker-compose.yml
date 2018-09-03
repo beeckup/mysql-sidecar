@@ -1,7 +1,7 @@
 version: '2'
 services:
   sidecar-backup-mysql:
-      image: nutellinoit/sidecar-backup-mysql:latest
+      image: beeckup/sidecar-backup-mysql:latest
       volumes:
           - ./dumpdb:/go/src/app/dumpdb
       restart: always
@@ -20,6 +20,7 @@ services:
         - S3_PROTOCOL=${S3_PROTOCOL}
         - ZIP_FILE=${ZIP_FILE}
         - MYSQL_ALL_DB=${MYSQL_ALL_DB}
+        - CLEAN_DAYS=${CLEAN_DAYS}
 ##################
 ##### example db
   db:
@@ -30,30 +31,3 @@ services:
       environment:
         MYSQL_DATABASE: ${MYSQL_DATABASE}
         MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
-###################
-##### example minio install
-  minio:
-    image: minio/minio
-    ports:
-       - "${MINIO_PORT}:9000"
-    volumes:
-      - ./minio_storage:/data
-    environment:
-      - MINIO_ACCESS_KEY=${S3_KEY}
-      - MINIO_SECRET_KEY=${S3_SECRET}
-    command: minio server /data
-####################
-##### example init container to create a new bucket if doesn't exist
-  createbuckets:
-    image: minio/mc
-    depends_on:
-      - minio
-    entrypoint: >
-      /bin/sh -c "
-      sleep 20;
-      /usr/bin/mc config host add custom_instance ${S3_PROTOCOL}://${S3_HOST} ${S3_KEY} ${S3_SECRET};
-      /usr/bin/mc rm -r --force custom_instance/${S3_BUCKET};
-      /usr/bin/mc mb custom_instance/${S3_BUCKET};
-       /usr/bin/mc policy download custom_instance/${S3_BUCKET};
-      exit 0;
-      "

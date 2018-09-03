@@ -1,5 +1,7 @@
 # Sidecar Backup Mysql
 
+## Automatic Mysql Backup on S3
+
 Example deploy on  ```deploy_sidecar_example/docker-compose.yml```
 
 Copy `env.sample` as `.env`
@@ -14,6 +16,7 @@ MYSQL_SQL_FILENAME |  backup filename part | string
 MYSQL_ALL_DB | cycle all database and backups single file each | `true` or empty
 SCHEDULE | see below | 
 ZIP_FILE | true to enable tar.gz compression | `true` or empty
+CLEAN_DAYS | number of backup retention days | integer or empty
 
 ## Schedule
 
@@ -75,6 +78,10 @@ ZIP_FILE=true
 
 ### ALL DB , true to enable
 MYSQL_ALL_DB=
+
+### Number of days to maintain backup history
+CLEAN_DAYS=15
+
 ```
 
 Create `docker-compose.yml` file:

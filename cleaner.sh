@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Usage: ./cleaner "bucketname" "30 days" "directory"
 

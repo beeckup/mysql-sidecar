@@ -174,3 +174,9 @@ if [ "$MYSQL_ALL_DB" = "" ]; then
 fi
 
 
+
+if [ -n "$CLEAN_DAYS" ]; then
+    echo "Cleaning bucket"
+    ./cleaner.sh "$S3_BUCKET" "$CLEAN_DAYS days" "dumpdb"
+
+fi
