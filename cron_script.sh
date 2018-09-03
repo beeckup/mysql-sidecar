@@ -176,7 +176,7 @@ fi
 
 
 
-if [ -n "$CLEAN_DAYS" ]; then
+if [ "$CLEAN_DAYS" -gt "0" ]; then
     echo "Cleaning bucket"
     ./cleaner.sh "$S3_BUCKET" "$CLEAN_DAYS days" "dumpdb"
 
