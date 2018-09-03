@@ -125,7 +125,8 @@ if [ "$MYSQL_ALL_DB" = "" ]; then
 
     echo "Dumping $MYSQL_DATABASE mysql database..."
 
-    mysqldump --skip_add_locks --skip-lock-tables  "$MYSQL_DATABASE" -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" -h "$MYSQL_HOST" --max_allowed_packet=3000M --complete-insert > $_file
+
+    mysqldump --skip_add_locks --skip-lock-tables "$MYSQL_DATABASE" -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" -h "$MYSQL_HOST" --max_allowed_packet=3000M --complete-insert > $_file
 
     if [ "$ZIP_FILE" = "true" ]; then
         echo "Compress $MYSQL_DATABASE mysql database..."
