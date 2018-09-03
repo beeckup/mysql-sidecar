@@ -109,6 +109,7 @@ services:
         - S3_PROTOCOL=${S3_PROTOCOL}
         - ZIP_FILE=${ZIP_FILE}
         - MYSQL_ALL_DB=${MYSQL_ALL_DB}
+        - CLEAN_DAYS=${CLEAN_DAYS}
 
 ```
 
