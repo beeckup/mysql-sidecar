@@ -10,5 +10,10 @@ RUN go build backup.go
 RUN apk update \
     && apk add mysql-client \
     && apk add --no-cache openssl curl
+RUN apk add python
+RUN apk add py-pip
+RUN pip install awscli
+RUN apk add --update coreutils
 RUN chmod +x cron_script.sh
+RUN chmod +x cleaner.sh
 CMD ["./backup"]

@@ -125,6 +125,7 @@ if [ "$MYSQL_ALL_DB" = "" ]; then
 
     echo "Dumping $MYSQL_DATABASE mysql database..."
 
+
     mysqldump --skip_add_locks --skip-lock-tables "$MYSQL_DATABASE" -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" -h "$MYSQL_HOST" --max_allowed_packet=3000M --complete-insert > $_file
 
     if [ "$ZIP_FILE" = "true" ]; then
@@ -174,3 +175,9 @@ if [ "$MYSQL_ALL_DB" = "" ]; then
 fi
 
 
+
+if [ -n "$CLEAN_DAYS" ]; then
+    echo "Cleaning bucket"
+    ./cleaner.sh "$S3_BUCKET" "$CLEAN_DAYS days" "dumpdb"
+
+fi
