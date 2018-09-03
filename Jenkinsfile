@@ -8,6 +8,7 @@ node {
 
     stage('Copy file for docker build') {
         sh "cp cron_script.sh build_container/cron_script.sh"
+        sh "cp cleaner.sh build_container/cleaner.sh"
         sh "cp backup.go build_container/backup.go"
     }
 
