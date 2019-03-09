@@ -54,14 +54,18 @@ pipeline {
         }
         stage('Build image') {
             steps {
-                app = docker.build(BaseimageName, "--pull docker/")
+                script {
+                    app = docker.build(BaseimageName, "--pull docker/")
+                }
             }
         }
 
         stage('Push image') {
             steps {
-                docker.withRegistry('https://registry.hub.docker.com', 'docker-hub-credentials') {
-                    app.push("${tag}")
+                script {
+                    docker.withRegistry('https://registry.hub.docker.com', 'docker-hub-credentials') {
+                        app.push("${tag}")
+                    }
                 }
             }
         }
