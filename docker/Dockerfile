@@ -4,6 +4,7 @@ COPY . .
 RUN mkdir tempdump
 RUN apk add --no-cache git mysql-client openssl curl python py-pip coreutils\
     && go get github.com/robfig/cron \
-    && go get github.com/aws/aws-sdk-go
+    && go get github.com/aws/aws-sdk-go \
+    && go get github.com/go-sql-driver/mysql
 RUN go build -o main src/main.go src/common.go src/minio.go src/aws.go src/mysql.go src/zip.go
 CMD ["./main"]
