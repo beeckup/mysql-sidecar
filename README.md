@@ -1,8 +1,8 @@
-<img src="./docimages/LOGO_oriz.png" alt="logo" width="350"/>
+<img src="./docimages/LOGO_oriz.png" alt="logo" width="350"/> <img src="./docimages/logo-mysql.png" alt="logo" width="350"/>
 
 # Sidecar Mysql
 
-## Automatic Mysql Backup and upload on AWS S3 and Minio
+## Automatic Mysql Backup and upload on AWS S3 or Minio
 
 Goland container to schedule and backup mysql database
 

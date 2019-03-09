@@ -13,10 +13,13 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strconv"
 	"time"
 )
+
+type runConfiguration struct {
+	onlyOnce bool
+}
 
 type uploadConfiguration struct {
 	awsAccessKeyId     string
@@ -71,10 +74,16 @@ func main() {
 		allDbs:   mysqlAllDbsLocal,
 	}
 
+	onlyOnceLocal, _ := strconv.ParseBool(os.Getenv("ONLY_ONCE"))
+
+	runConfiguration := runConfiguration{
+		onlyOnce: onlyOnceLocal,
+	}
+
 	// Initialize cron
 	c := cron.New()
 	_ = c.AddFunc(os.Getenv("SCHEDULE"), func() { fmt.Println("Running Scheduled Job: " + os.Getenv("SCHEDULE")) })
-	_ = c.AddFunc(os.Getenv("SCHEDULE"), func() { runBackup(mysqlBackupConfiguration, uploadConfiguration) })
+	_ = c.AddFunc(os.Getenv("SCHEDULE"), func() { runBackup(mysqlBackupConfiguration, uploadConfiguration, runConfiguration) })
 	c.Start()
 
 	// Run main forever
@@ -85,10 +94,19 @@ func main() {
 
 //https://github.com/minio/cookbook/blob/master/docs/aws-sdk-for-go-with-minio.md
 
-func runBackup(mysqlBackupConfiguration mysqlBackupConfiguration, uploadConfiguration uploadConfiguration) {
+func runBackup(mysqlBackupConfiguration mysqlBackupConfiguration, uploadConfiguration uploadConfiguration, runConfiguration runConfiguration) {
 
 	fmt.Println("Running backup operation...")
-	uploadMinio(uploadConfiguration, backupMysql(mysqlBackupConfiguration))
+
+	if uploadConfiguration.minioEnabled {
+		uploadMinio(uploadConfiguration, backupMysql(mysqlBackupConfiguration))
+	} else {
+		uploadS3(uploadConfiguration, backupMysql(mysqlBackupConfiguration))
+	}
+
+	if runConfiguration.onlyOnce {
+		os.Exit(0)
+	}
 
 }
 
@@ -144,6 +162,15 @@ func backupMysql(mysqlBackupConfiguration mysqlBackupConfiguration) string {
 
 }
 
+func deleteFile(path string) {
+	err := os.Remove(path)
+
+	if err != nil {
+		fmt.Println("error", err)
+		os.Exit(1)
+	}
+}
+
 func uploadMinio(uploadConfiguration uploadConfiguration, filenameToUpload string) {
 
 	file, err := os.Open(filenameToUpload)
@@ -181,34 +208,28 @@ func uploadMinio(uploadConfiguration uploadConfiguration, filenameToUpload strin
 
 }
 
-func deleteFile(path string) {
-	err := os.Remove(path)
+func uploadS3(uploadConfiguration uploadConfiguration, filenameToUpload string) {
 
+	file, err := os.Open(filenameToUpload)
 	if err != nil {
-		fmt.Println("error", err)
-		os.Exit(1)
-	}
-}
-
-func uploadS3(filename string, bucket string) {
-
-	file, err := os.Open(filename)
-	if err != nil {
-		fmt.Println("Failed to open file", filename, err)
+		fmt.Println("Failed to open file", filenameToUpload, err)
 		os.Exit(1)
 	}
 	defer file.Close()
 
-	//Aws config from environment variables
-	conf := aws.Config{}
+	conf := aws.Config{
+		Credentials: credentials.NewStaticCredentials(uploadConfiguration.awsAccessKeyId, uploadConfiguration.awsSecretAccesKey, ""),
+		Endpoint:    aws.String(uploadConfiguration.minioUrl),
+		Region:      aws.String(uploadConfiguration.awsDefaultRegion),
+	}
 
 	sess := session.New(&conf)
 	svc := s3manager.NewUploader(sess)
 
 	fmt.Println("Uploading file to S3...")
 	result, err := svc.Upload(&s3manager.UploadInput{
-		Bucket: aws.String(bucket),
-		Key:    aws.String(filepath.Base(filename)),
+		Bucket: aws.String(uploadConfiguration.awsBucket),
+		Key:    aws.String(uploadConfiguration.targetFolderPrefix + filenameToUpload),
 		Body:   file,
 	})
 	if err != nil {
@@ -216,7 +237,9 @@ func uploadS3(filename string, bucket string) {
 		os.Exit(1)
 	}
 
-	fmt.Printf("Successfully uploaded %s to %s\n", filename, result.Location)
+	deleteFile(filenameToUpload)
+
+	fmt.Printf("Successfully uploaded %s to %s\n", filenameToUpload, result.Location)
 
 }
 
