@@ -1,6 +1,7 @@
 #!/bin/sh
 
 SCHEDULE="*/10 * * * * *" \
+  ONLY_ONCE="true" \
   AWS_ACCESS_KEY_ID="123123123" \
   AWS_SECRET_ACCESS_KEY="456456456456" \
   AWS_DEFAULT_REGION="eu-west-1" \
@@ -17,4 +18,4 @@ SCHEDULE="*/10 * * * * *" \
   MYSQL_USER="root" \
   MYSQL_PASSWORD="123456" \
   MYSQL_ALL_DB="false" \
-  go run backup.go
+  go run src/main.go src/common.go src/minio.go src/aws.go src/mysql.go src/zip.go

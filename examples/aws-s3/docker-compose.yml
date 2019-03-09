@@ -1,9 +1,9 @@
 version: '2'
 services:
   sidecar-backup-mysql:
-      image: beeckup/sidecar-backup-mysql:latest
+      image: beeckup/mysql-sidecar:latest
       volumes:
-          - ./dumpdb:/go/src/app/dumpdb
+          - ./tempdump:/go/src/app/tempdump
       restart: always
       environment:
         - MYSQL_HOST=${MYSQL_HOST}

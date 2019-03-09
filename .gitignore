@@ -51,3 +51,4 @@ fabric.properties
 /build/*
 /deploy_sidecar_example/dumpdb/
 /minio_dev/minio_storage/
+/dev_containers/minio_dev/minio_storage/
