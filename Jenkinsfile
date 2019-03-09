@@ -1,4 +1,5 @@
 def app
+def tag
 pipeline {
 
     options {
@@ -58,6 +59,7 @@ pipeline {
                 script {
                     docker.withRegistry('https://registry.hub.docker.com', 'docker-hub-credentials') {
                         app.push("${tag}")
+                        app.push(${env.BUILD_NUMBER})
                     }
                 }
             }
@@ -67,6 +69,7 @@ pipeline {
             steps {
                 sh """
             docker rmi ${BaseimageName}:${tag}
+            docker rmi ${BaseimageName}:${env.BUILD_NUMBER}
           """
             }
         }
