@@ -8,6 +8,9 @@ pipeline {
     parameters {
     }
 
+    agent{
+    }
+
     stages {
         stage('Check') {
             steps {
