@@ -50,3 +50,4 @@ fabric.properties
 /deploy_sidecar_example/.env
 /build/*
 /deploy_sidecar_example/dumpdb/
+/minio_dev/minio_storage/

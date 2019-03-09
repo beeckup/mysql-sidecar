@@ -1,80 +1,284 @@
 package main
 
 import (
+	"archive/zip"
 	"fmt"
-	"net"
-	"os"
-	"strconv"
-	"bytes"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/robfig/cron"
+	"io"
+	"io/ioutil"
+	"log"
+	"os"
 	"os/exec"
+	"path/filepath"
+	"strconv"
+	"time"
 )
 
-const (
-	CONN_PORT = "3333"
-	CONN_TYPE = "tcp"
-)
+type uploadConfiguration struct {
+	awsAccessKeyId     string
+	awsSecretAccesKey  string
+	awsDefaultRegion   string
+	awsBucket          string
+	minioUrl           string
+	minioEnabled       bool
+	minioSsl           bool
+	targetFolderPrefix string
+}
+
+type mysqlBackupConfiguration struct {
+	host     string
+	port     string
+	database string
+	user     string
+	password string
+	allDbs   bool
+}
+
+type cleanConfiguration struct {
+	cleanDays int
+}
 
 func main() {
-	// Listen for incoming connections.
-	l, err := net.Listen(CONN_TYPE, ":"+CONN_PORT)
-	if err != nil {
-		fmt.Println("Cannot bind! ", err.Error())
-		os.Exit(1)
-	}
-	// Close the listener when the application closes.
-	defer l.Close()
-	fmt.Println("Useless listen " + CONN_PORT)
 
+	minioEnabledLocal, _ := strconv.ParseBool(os.Getenv("MINIO_ENABLED"))
+	minioSslLocal, _ := strconv.ParseBool(os.Getenv("MINIO_SSL"))
+	// Initialize variables
+	uploadConfiguration := uploadConfiguration{
+		awsAccessKeyId:     os.Getenv("AWS_ACCESS_KEY_ID"),
+		awsSecretAccesKey:  os.Getenv("AWS_SECRET_ACCESS_KEY"),
+		awsDefaultRegion:   os.Getenv("AWS_DEFAULT_REGION"),
+		awsBucket:          os.Getenv("AWS_S3_TARGET_BUCKET"),
+		minioUrl:           os.Getenv("MINIO_URL"),
+		minioEnabled:       minioEnabledLocal,
+		minioSsl:           minioSslLocal,
+		targetFolderPrefix: os.Getenv("TARGET_FOLDER_PREFIX"),
+	}
+
+	mysqlAllDbsLocal, _ := strconv.ParseBool(os.Getenv("MYSQL_ALL_DB"))
+
+	mysqlBackupConfiguration := mysqlBackupConfiguration{
+		host:     os.Getenv("MYSQL_HOST"),
+		port:     os.Getenv("MYSQL_PORT"),
+		database: os.Getenv("MYSQL_DATABASE"),
+		user:     os.Getenv("MYSQL_USER"),
+		password: os.Getenv("MYSQL_PASSWORD"),
+		allDbs:   mysqlAllDbsLocal,
+	}
+
+	// Initialize cron
 	c := cron.New()
-	c.AddFunc(os.Getenv("SCHEDULE"), func() { fmt.Println("Cron schedule: "+os.Getenv("SCHEDULE")) })
-	c.AddFunc(os.Getenv("SCHEDULE"), func() { exe_cmd("./cron_script.sh") })
+	_ = c.AddFunc(os.Getenv("SCHEDULE"), func() { fmt.Println("Running Scheduled Job: " + os.Getenv("SCHEDULE")) })
+	_ = c.AddFunc(os.Getenv("SCHEDULE"), func() { runBackup(mysqlBackupConfiguration, uploadConfiguration) })
 	c.Start()
 
-	for {
-		// Listen for an incoming connection.
-		conn, err := l.Accept()
-		if err != nil {
-			fmt.Println("Error accepting: ", err.Error())
-			os.Exit(1)
+	// Run main forever
+	select {}
+
+}
+
+//https://github.com/minio/cookbook/blob/master/docs/aws-sdk-for-go-with-minio.md
+
+func runBackup(mysqlBackupConfiguration mysqlBackupConfiguration, uploadConfiguration uploadConfiguration) {
+
+	fmt.Println("Running backup operation...")
+	uploadMinio(uploadConfiguration, backupMysql(mysqlBackupConfiguration))
+
+}
+
+func backupMysql(mysqlBackupConfiguration mysqlBackupConfiguration) string {
+
+	//--skip_add_locks --skip-lock-tables --max_allowed_packet=1500M --complete-insert
+
+	fmt.Printf("Executing mysqldump on %s database %s...\n", mysqlBackupConfiguration.host, mysqlBackupConfiguration.database)
+
+	cmd := exec.Command("mysqldump",
+		"--complete-insert",
+		"--skip_add_locks",
+		"--skip-lock-tables",
+		"--max_allowed_packet=1500M",
+		"-P"+mysqlBackupConfiguration.port,
+		"-h"+mysqlBackupConfiguration.host,
+		"-u"+mysqlBackupConfiguration.user,
+		"-p"+mysqlBackupConfiguration.password,
+		mysqlBackupConfiguration.database)
+
+	//command :=  []string { "mysqldump",
+	//	"-P"+mysqlBackupConfiguration.port,
+	//	"-h"+mysqlBackupConfiguration.host,
+	//	"-u"+mysqlBackupConfiguration.user,
+	//	"-p"+mysqlBackupConfiguration.password,
+	//	mysqlBackupConfiguration.database }
+	//
+	//fmt.Printf("command: %s \n",strings.Join(command," "))
+
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if err := cmd.Start(); err != nil {
+		log.Fatal(err)
+	}
+
+	bytes, err := ioutil.ReadAll(stdout)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	currentTime := time.Now().Local()
+	timestamp := strconv.FormatInt(time.Now().UTC().UnixNano(), 10)
+
+	fileDump := currentTime.Format("2006-01-02") + "-" + timestamp + "_dump.sql"
+
+	err = ioutil.WriteFile(fileDump, bytes, 0644)
+	if err != nil {
+		panic(err)
+	}
+
+	//zip file before uploading
+	filesToZip := []string{fileDump}
+	fileDumpZip := currentTime.Format("2006-01-02") + "-" + timestamp + "_dump.zip"
+
+	if err := zipFiles(fileDumpZip, filesToZip); err != nil {
+		panic(err)
+	}
+	deleteFile(fileDump)
+
+	return fileDumpZip
+
+}
+
+func uploadMinio(uploadConfiguration uploadConfiguration, filenameToUpload string) {
+
+	file, err := os.Open(filenameToUpload)
+	if err != nil {
+		fmt.Println("Failed to open file", filenameToUpload, err)
+		os.Exit(1)
+	}
+	defer file.Close()
+
+	conf := aws.Config{
+		Credentials:      credentials.NewStaticCredentials(uploadConfiguration.awsAccessKeyId, uploadConfiguration.awsSecretAccesKey, ""),
+		Endpoint:         aws.String(uploadConfiguration.minioUrl),
+		Region:           aws.String("eu-west-1"),
+		DisableSSL:       aws.Bool(uploadConfiguration.minioSsl),
+		S3ForcePathStyle: aws.Bool(true),
+	}
+
+	sess := session.New(&conf)
+	svc := s3manager.NewUploader(sess)
+
+	fmt.Println("Uploading file to S3...")
+	result, err := svc.Upload(&s3manager.UploadInput{
+		Bucket: aws.String(uploadConfiguration.awsBucket),
+		Key:    aws.String(uploadConfiguration.targetFolderPrefix + filenameToUpload),
+		Body:   file,
+	})
+	if err != nil {
+		fmt.Println("error", err)
+		os.Exit(1)
+	}
+
+	deleteFile(filenameToUpload)
+
+	fmt.Printf("Successfully uploaded %s to %s\n", filenameToUpload, result.Location)
+
+}
+
+func deleteFile(path string) {
+	err := os.Remove(path)
+
+	if err != nil {
+		fmt.Println("error", err)
+		os.Exit(1)
+	}
+}
+
+func uploadS3(filename string, bucket string) {
+
+	file, err := os.Open(filename)
+	if err != nil {
+		fmt.Println("Failed to open file", filename, err)
+		os.Exit(1)
+	}
+	defer file.Close()
+
+	//Aws config from environment variables
+	conf := aws.Config{}
+
+	sess := session.New(&conf)
+	svc := s3manager.NewUploader(sess)
+
+	fmt.Println("Uploading file to S3...")
+	result, err := svc.Upload(&s3manager.UploadInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(filepath.Base(filename)),
+		Body:   file,
+	})
+	if err != nil {
+		fmt.Println("error", err)
+		os.Exit(1)
+	}
+
+	fmt.Printf("Successfully uploaded %s to %s\n", filename, result.Location)
+
+}
+
+func zipFiles(filename string, files []string) error {
+
+	newZipFile, err := os.Create(filename)
+	if err != nil {
+		return err
+	}
+	defer newZipFile.Close()
+
+	zipWriter := zip.NewWriter(newZipFile)
+	defer zipWriter.Close()
+
+	// Add files to zip
+	for _, file := range files {
+		if err = addFileToZip(zipWriter, file); err != nil {
+			return err
 		}
-
-		//logs an incoming message
-		fmt.Printf("Received message %s -> %s \n", conn.RemoteAddr(), conn.LocalAddr())
-
-		// Handle connections in a new goroutine.
-		go handleRequest(conn)
 	}
+	return nil
 }
 
-// Handles incoming requests.
-func handleRequest(conn net.Conn) {
-	// Make a buffer to hold incoming data.
-	buf := make([]byte, 1024)
-	// Read the incoming connection into the buffer.
-	reqLen, err := conn.Read(buf)
+func addFileToZip(zipWriter *zip.Writer, filename string) error {
+
+	fileToZip, err := os.Open(filename)
 	if err != nil {
-		fmt.Println("Error reading:", err.Error())
+		return err
 	}
-	// Builds the message.
-	message := "Hi, I received your message! It was "
-	message += strconv.Itoa(reqLen)
-	message += " bytes long and that's what it said: \""
-	n := bytes.Index(buf, []byte{0})
-	message += string(buf[:n-1])
-	message += "\" ! Honestly I have no clue about what to do with your messages, so Bye Bye!\n"
+	defer fileToZip.Close()
 
-	// Write the message in the connection channel.
-	conn.Write([]byte(message));
-	// Close the connection when you're done with it.
-	conn.Close()
-}
-
-func exe_cmd(cmd string) {
-
-	out, err := exec.Command("sh","-c",cmd).Output()
+	// Get the file information
+	info, err := fileToZip.Stat()
 	if err != nil {
-		fmt.Printf("%s", err)
+		return err
 	}
-	fmt.Printf("%s", out)
+
+	header, err := zip.FileInfoHeader(info)
+	if err != nil {
+		return err
+	}
+
+	// Using FileInfoHeader() above only uses the basename of the file. If we want
+	// to preserve the folder structure we can overwrite this with the full path.
+	header.Name = filename
+
+	// Change to deflate to gain better compression
+	// see http://golang.org/pkg/archive/zip/#pkg-constants
+	header.Method = zip.Deflate
+
+	writer, err := zipWriter.CreateHeader(header)
+	if err != nil {
+		return err
+	}
+	_, err = io.Copy(writer, fileToZip)
+	return err
 }
