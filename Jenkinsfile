@@ -10,7 +10,7 @@ pipeline {
     stages {
         stage('Check') {
             steps {
-                withEnv(["PATH+NODEJS=${tool params.NODEJS_TOOL_NAME}/bin"]) {
+
                     script {
                         // enforce branches
                         switch (BRANCH_NAME) {
@@ -29,13 +29,9 @@ pipeline {
                         }
 
                         // check tools
-                        sh """
-              docker --version
-            """
-
                         BaseimageName = "beeckup/mysql-sidecar"
                     }
-                }
+
             }
         }
 
