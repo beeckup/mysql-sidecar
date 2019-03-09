@@ -44,9 +44,11 @@ type cleanConfiguration struct {
 
 func main() {
 
+	// Initialize variables
+
 	minioEnabledLocal, _ := strconv.ParseBool(os.Getenv("MINIO_ENABLED"))
 	minioSslLocal, _ := strconv.ParseBool(os.Getenv("MINIO_SSL"))
-	// Initialize variables
+
 	uploadConfiguration := uploadConfiguration{
 		awsAccessKeyId:     os.Getenv("AWS_ACCESS_KEY_ID"),
 		awsSecretAccesKey:  os.Getenv("AWS_SECRET_ACCESS_KEY"),
@@ -76,6 +78,7 @@ func main() {
 	c.Start()
 
 	// Run main forever
+
 	select {}
 
 }
@@ -91,8 +94,6 @@ func runBackup(mysqlBackupConfiguration mysqlBackupConfiguration, uploadConfigur
 
 func backupMysql(mysqlBackupConfiguration mysqlBackupConfiguration) string {
 
-	//--skip_add_locks --skip-lock-tables --max_allowed_packet=1500M --complete-insert
-
 	fmt.Printf("Executing mysqldump on %s database %s...\n", mysqlBackupConfiguration.host, mysqlBackupConfiguration.database)
 
 	cmd := exec.Command("mysqldump",
@@ -105,15 +106,6 @@ func backupMysql(mysqlBackupConfiguration mysqlBackupConfiguration) string {
 		"-u"+mysqlBackupConfiguration.user,
 		"-p"+mysqlBackupConfiguration.password,
 		mysqlBackupConfiguration.database)
-
-	//command :=  []string { "mysqldump",
-	//	"-P"+mysqlBackupConfiguration.port,
-	//	"-h"+mysqlBackupConfiguration.host,
-	//	"-u"+mysqlBackupConfiguration.user,
-	//	"-p"+mysqlBackupConfiguration.password,
-	//	mysqlBackupConfiguration.database }
-	//
-	//fmt.Printf("command: %s \n",strings.Join(command," "))
 
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
