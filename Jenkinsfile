@@ -68,8 +68,8 @@ pipeline {
         stage('Clean') {
             steps {
                 sh """
-            docker rmi ${BaseimageName}:${tag}
-            docker rmi ${BaseimageName}:${env.BUILD_NUMBER}
+            docker rmi registry.hub.docker.com/${BaseimageName}:${tag}
+            docker rmi registry.hub.docker.com/${BaseimageName}:${env.BUILD_NUMBER}
           """
             }
         }
