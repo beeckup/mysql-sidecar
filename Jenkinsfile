@@ -38,12 +38,7 @@ pipeline {
 
         stage('Copy file for docker build') {
             steps {
-                sh "cp src/aws.go docker/"
-                sh "cp src/common.go docker/"
-                sh "cp src/main.go docker/"
-                sh "cp src/minio.go docker/"
-                sh "cp src/mysql.go docker/"
-                sh "cp src/zip.go docker/"
+                sh "cp -r src docker/src"
             }
         }
         stage('Build image') {
