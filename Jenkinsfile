@@ -8,8 +8,7 @@ pipeline {
     parameters {
     }
 
-    agent{
-    }
+    agent any
 
     stages {
         stage('Check') {
