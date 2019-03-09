@@ -1,4 +1,4 @@
-![](docimages/LOGO_oriz.png)
+<img src="./docimages/LOGO_oriz.png" alt="logo" width="200"/>
 
 # Sidecar Mysql
 
