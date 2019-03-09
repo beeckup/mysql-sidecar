@@ -1,4 +1,4 @@
-<img src="./docimages/LOGO_oriz.png" alt="logo" width="200"/>
+<img src="./docimages/LOGO_oriz.png" alt="logo" width="350"/>
 
 # Sidecar Mysql
 
