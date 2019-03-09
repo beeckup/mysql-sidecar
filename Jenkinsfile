@@ -1,3 +1,4 @@
+def app
 pipeline {
 
     options {
@@ -40,20 +41,26 @@ pipeline {
         }
 
         stage('Copy file for docker build') {
-            sh "cp src/aws.go docker/"
-            sh "cp src/common.go docker/"
-            sh "cp src/main.go docker/"
-            sh "cp src/minio.go docker/"
-            sh "cp src/mysql.go docker/"
-            sh "cp src/zip.go docker/"
+            steps {
+                sh "cp src/aws.go docker/"
+                sh "cp src/common.go docker/"
+                sh "cp src/main.go docker/"
+                sh "cp src/minio.go docker/"
+                sh "cp src/mysql.go docker/"
+                sh "cp src/zip.go docker/"
+            }
         }
         stage('Build image') {
-            app = docker.build(BaseimageName,"--pull docker/")
+            steps {
+                app = docker.build(BaseimageName, "--pull docker/")
+            }
         }
 
         stage('Push image') {
-            docker.withRegistry('https://registry.hub.docker.com', 'docker-hub-credentials') {
-                app.push("${tag}")
+            steps {
+                docker.withRegistry('https://registry.hub.docker.com', 'docker-hub-credentials') {
+                    app.push("${tag}")
+                }
             }
         }
 
