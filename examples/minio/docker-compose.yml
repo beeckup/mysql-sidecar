@@ -1,60 +1,24 @@
 version: '2'
 services:
-  sidecar-backup-mysql:
-      image: beeckup/mysql-sidecar:latest
-      volumes:
-          - ./tempdump:/go/src/app/tempdump
-      restart: always
-      environment:
-        - MYSQL_HOST=${MYSQL_HOST}
-        - MYSQL_DATABASE=${MYSQL_DATABASE}
-        - MYSQL_USER=${MYSQL_USER}
-        - MYSQL_PASSWORD=${MYSQL_PASSWORD}
-        - MYSQL_SQL_FILENAME=${MYSQL_SQL_FILENAME}
-        - SCHEDULE=${SCHEDULE}
-        - S3_UPLOAD=${S3_UPLOAD}
-        - S3_BUCKET=${S3_BUCKET}
-        - S3_KEY=${S3_KEY}
-        - S3_SECRET=${S3_SECRET}
-        - S3_HOST=${S3_HOST}
-        - S3_PROTOCOL=${S3_PROTOCOL}
-        - ZIP_FILE=${ZIP_FILE}
-        - MYSQL_ALL_DB=${MYSQL_ALL_DB}
-        - CLEAN_DAYS=${CLEAN_DAYS}
-##################
-##### example db
-  db:
-      image: mysql:5.7.22
-      restart: always
-      ports:
-        - "3306:3306" #only test
-      environment:
-        MYSQL_DATABASE: ${MYSQL_DATABASE}
-        MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
-###################
-##### example minio install
-  minio:
-    image: minio/minio
-    ports:
-       - "${MINIO_PORT}:9000"
+  mysql-sidecar:
+    image: beeckup/mysql-sidecar:latest
     volumes:
-      - ./minio_storage:/data
+      - ./tempdump:/go/src/app/tempdump
+    restart: always
     environment:
-      - MINIO_ACCESS_KEY=${S3_KEY}
-      - MINIO_SECRET_KEY=${S3_SECRET}
-    command: minio server /data
-####################
-##### example container to create a new bucket if doesn't exist
-  createbuckets:
-    image: minio/mc
-    depends_on:
-      - minio
-    entrypoint: >
-      /bin/sh -c "
-      sleep 20;
-      /usr/bin/mc config host add custom_instance ${S3_PROTOCOL}://${S3_HOST} ${S3_KEY} ${S3_SECRET};
-      /usr/bin/mc rm -r --force custom_instance/${S3_BUCKET};
-      /usr/bin/mc mb custom_instance/${S3_BUCKET};
-       /usr/bin/mc policy download custom_instance/${S3_BUCKET};
-      exit 0;
-      "
+      - SCHEDULE=${SCHEDULE}
+      - MINIO_ENABLED=${MINIO_ENABLED}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_S3_TARGET_BUCKET=${AWS_S3_TARGET_BUCKET}
+      - MINIO_URL=${MINIO_URL}
+      - MINIO_SSL=${MINIO_SSL}
+      - TARGET_FOLDER_PREFIX=${TARGET_FOLDER_PREFIX}
+      - MYSQL_HOST=${MYSQL_HOST}
+      - MYSQL_PORT=${MYSQL_PORT}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_ALL_DB=${MYSQL_ALL_DB}
+      - CLEAN_DAYS=${CLEAN_DAYS}
+      - CLEAN_FOLDER=${CLEAN_FOLDER}

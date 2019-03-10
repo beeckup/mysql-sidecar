@@ -1,4 +1,4 @@
-<img src="./docimages/LOGO_oriz.png" alt="logo" height="150"/> <img src="./docimages/logo-mysql.png" alt="logo" height="150"/>
+<img src="./images/LOGO_oriz.png" alt="logo" height="150"/> <img src="./images/logo-mysql.png" alt="logo" height="150"/>
 
 # Sidecar Mysql
 
@@ -12,7 +12,7 @@ Copy `env.sample` as `.env`
 
 ENVIROMENT VARIABLE   | DESCRIPTION | Values
 ----------   | ---------- | --------------  
-TARGET_FOLDER_PREFIX | folder and prefix filename pattern on upload S3 | `dumpfolder/prefix_` 
+TARGET_FOLDER_PREFIX | folder and prefix filename pattern on upload S3 | `dump_database/prefix_` 
 SCHEDULE | see below | `0 * * * * *` once per minute
 AWS_ACCESS_KEY_ID | Aws access key or Minio username | Access key string
 AWS_SECRET_ACCESS_KEY | Aws secret key or Minio password | Secret access key string
@@ -48,17 +48,9 @@ Day of week  | Yes        | 0-6 or SUN-SAT  | * / , - ?
 
 # Usage, AWS Example
 
-Create `.env` file:
+Go to `examples/aws-s3/`
 
-```bash
-
-```
-
-Create `docker-compose.yml` file:
-
-```yml
-
-```
+Create file `.env` and configure parameters
 
 Launch with
 
@@ -69,17 +61,9 @@ docker-compose up -d
 
 # Usage, MINIO Example
 
-Create `.env` file:
+Go to `examples/minio/`
 
-```bash
-
-```
-
-Create `docker-compose.yml` file:
-
-```yml
-
-```
+Create file `.env` and configure parameters
 
 Launch with
 

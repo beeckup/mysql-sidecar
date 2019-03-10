@@ -50,7 +50,6 @@ fabric.properties
 /deploy_sidecar_example/.env
 /build/*
 /deploy_sidecar_example/dumpdb/
-/minio_dev/minio_storage/
-/dev_containers/minio_dev/minio_storage/
-tempdump/
-!tempdump/placeholder.txt
+dev/minio_dev/minio_storage/
+dev/tempdump/
+!dev/tempdump/placeholder.txt

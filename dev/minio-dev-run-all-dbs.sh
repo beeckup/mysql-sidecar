@@ -7,7 +7,6 @@ SCHEDULE="*/10 * * * * *" \
   AWS_DEFAULT_REGION="eu-west-1" \
   DEV_FILENAME_TO_UPLOAD="testfile.txt" \
   AWS_S3_TARGET_BUCKET="testbucket" \
-  AWS_S3_TARGET_BUCKET="testbucket" \
   MINIO_ENABLED="true" \
   MINIO_URL="http://localhost:9000" \
   MINIO_SSL="false" \
@@ -20,4 +19,4 @@ SCHEDULE="*/10 * * * * *" \
   MYSQL_ALL_DB="true" \
   CLEAN_DAYS=3 \
   CLEAN_FOLDER=dump_database/ \
-  go run src/main.go src/common.go src/minio.go src/aws.go src/mysql.go src/zip.go
+  go run ../src/main.go ../src/common.go ../src/minio.go ../src/aws.go ../src/mysql.go ../src/zip.go

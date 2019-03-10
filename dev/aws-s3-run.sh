@@ -16,4 +16,4 @@ SCHEDULE="*/10 * * * * *" \
   MYSQL_ALL_DB="false" \
   CLEAN_DAYS=3 \
   CLEAN_FOLDER=dump_database/ \
-  go run src/main.go src/common.go src/minio.go src/aws.go src/mysql.go src/zip.go
+  go run ../src/main.go ../src/common.go ../src/minio.go ../src/aws.go ../src/mysql.go ../src/zip.go
