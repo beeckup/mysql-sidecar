@@ -18,4 +18,6 @@ SCHEDULE="*/10 * * * * *" \
   MYSQL_USER="root" \
   MYSQL_PASSWORD="123456" \
   MYSQL_ALL_DB="true" \
+  CLEAN_DAYS=3 \
+  CLEAN_FOLDER=dump_database/ \
   go run src/main.go src/common.go src/minio.go src/aws.go src/mysql.go src/zip.go

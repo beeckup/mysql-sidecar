@@ -36,6 +36,15 @@ func main() {
 		allDbs:   mysqlAllDbsLocal,
 	}
 
+	// Clean configuration
+
+	cleanDaysLocal, _ := strconv.ParseInt(os.Getenv("CLEAN_DAYS"), 10, 64)
+
+	cleanConfiguration := cleanConfiguration{
+		folder:    os.Getenv("CLEAN_FOLDER"),
+		cleanDays: cleanDaysLocal,
+	}
+
 	onlyOnceLocal, _ := strconv.ParseBool(os.Getenv("ONLY_ONCE"))
 
 	runConfiguration := runConfiguration{
@@ -45,7 +54,7 @@ func main() {
 	// Initialize cron
 	c := cron.New()
 	_ = c.AddFunc(os.Getenv("SCHEDULE"), func() { fmt.Println("Running Scheduled Job: " + os.Getenv("SCHEDULE")) })
-	_ = c.AddFunc(os.Getenv("SCHEDULE"), func() { runBackup(mysqlBackupConfiguration, uploadConfiguration, runConfiguration) })
+	_ = c.AddFunc(os.Getenv("SCHEDULE"), func() { runBackup(mysqlBackupConfiguration, uploadConfiguration, runConfiguration, cleanConfiguration) })
 	c.Start()
 
 	// Run main forever
@@ -54,14 +63,18 @@ func main() {
 
 }
 
-func runBackup(mysqlBackupConfiguration mysqlBackupConfiguration, uploadConfiguration uploadConfiguration, runConfiguration runConfiguration) {
+func runBackup(mysqlBackupConfiguration mysqlBackupConfiguration, uploadConfiguration uploadConfiguration, runConfiguration runConfiguration, cleanConfiguration cleanConfiguration) {
 
 	fmt.Println("Running backup operation...")
 
 	if uploadConfiguration.minioEnabled {
 		uploadMinio(uploadConfiguration, backupMysql(mysqlBackupConfiguration))
+		cleanMinio(uploadConfiguration, cleanConfiguration)
+
 	} else {
 		uploadS3(uploadConfiguration, backupMysql(mysqlBackupConfiguration))
+		cleanS3(uploadConfiguration, cleanConfiguration)
+
 	}
 
 	if runConfiguration.onlyOnce {

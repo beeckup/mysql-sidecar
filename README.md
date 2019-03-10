@@ -28,6 +28,7 @@ MYSQL_USER | database user | string
 MYSQL_PASSWORD | database password | string
 MYSQL_ALL_DB | cycle all database and backups single file each | `true` or `false`
 CLEAN_DAYS | number of backup retention days | integer or empty
+CLEAN_FOLDER | folder prefix to clean | eg `dump_database/`
 
 
 ## Schedule

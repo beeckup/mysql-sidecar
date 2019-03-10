@@ -96,6 +96,10 @@ func backupMysql(mysqlBackupConfiguration mysqlBackupConfiguration) filename {
 		panic(err)
 	}
 
+	for _, file := range filesToZip {
+		filename(file).delete()
+	}
+
 	return filename(fileDumpZip)
 
 }

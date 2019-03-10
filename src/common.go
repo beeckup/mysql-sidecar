@@ -5,6 +5,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"time"
 )
 
 type filename string
@@ -43,7 +44,8 @@ type mysqlBackupConfiguration struct {
 }
 
 type cleanConfiguration struct {
-	cleanDays int
+	folder    string
+	cleanDays int64
 }
 
 func testConnection(host string, port string) {
@@ -57,4 +59,20 @@ func testConnection(host string, port string) {
 		fmt.Println("Connection OK")
 	}
 	defer conn.Close()
+}
+
+func getDifferenceDays(t1 *time.Time, t2 *time.Time) int64 {
+
+	t2Tmp := *t2
+	diff := t1.Sub(t2Tmp)
+	return int64(diff.Hours() / 24)
+
+}
+
+func getDifferenceMinutes(t1 *time.Time, t2 *time.Time) int64 {
+
+	t2Tmp := *t2
+	diff := t1.Sub(t2Tmp)
+	return int64(diff.Minutes())
+
 }
