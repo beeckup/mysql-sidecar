@@ -1,38 +1,73 @@
-node {
-    def app
+def app
+def tag
+pipeline {
 
-    stage('Clone repository') {
-        /* Let's make sure we have the repository cloned to our workspace */
-        checkout scm
+    options {
+        disableConcurrentBuilds()
     }
 
-    stage('Copy file for docker build') {
-        sh "cp cron_script.sh build_container/cron_script.sh"
-        sh "cp cleaner.sh build_container/cleaner.sh"
-        sh "cp backup.go build_container/backup.go"
-    }
+    agent any
 
-    stage('Build image') {
-        app = docker.build("nutellinoit/sidecar-backup-mysql","--pull build_container/")
-    }
+    stages {
+        stage('Check') {
+            steps {
 
+                    script {
+                        // enforce branches
+                        switch (BRANCH_NAME) {
+                            case "master":
+                                tag = "latest"
+                                break
+                            case "test":
+                                tag = "test"
+                                break
+                            case "dev":
+                                tag = "dev"
+                                break
+                            default:
+                                error("Error")
+                                break
+                        }
 
-    stage('Push image') {
-        docker.withRegistry('https://registry.hub.docker.com', 'docker-hub-credentials') {
-            app.push("latest")
-            app.push("${env.BUILD_NUMBER}")
+                        // check tools
+                        BaseimageName = "beeckup/mysql-sidecar"
+                    }
+
+            }
+        }
+
+        stage('Copy file for docker build') {
+            steps {
+                sh "cp -r src docker/src"
+            }
+        }
+        stage('Build image') {
+            steps {
+                script {
+                    app = docker.build(BaseimageName, "--pull docker/")
+                }
+            }
+        }
+
+        stage('Push image') {
+            steps {
+                script {
+                    docker.withRegistry('https://registry.hub.docker.com', 'docker-hub-credentials') {
+                        app.push("${tag}")
+                        app.push("${env.BUILD_NUMBER}")
+                    }
+                }
+            }
+        }
+
+        stage('Clean') {
+            steps {
+                sh """
+            docker rmi registry.hub.docker.com/${BaseimageName}:${tag}
+            docker rmi registry.hub.docker.com/${BaseimageName}:${env.BUILD_NUMBER}
+          """
+            }
         }
     }
 
-    stage('Build image Beekup') {
-            app = docker.build("beeckup/sidecar-backup-mysql","--pull build_container/")
-        }
-
-
-    stage('Push image Beekup') {
-        docker.withRegistry('https://registry.hub.docker.com', 'docker-hub-credentials') {
-            app.push("latest")
-            app.push("${env.BUILD_NUMBER}")
-        }
-    }
 }

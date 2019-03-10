@@ -1,24 +1,35 @@
-# REFACTOR IN PROGRESS
+<img src="./images/LOGO_oriz.png" alt="logo" height="150"/> <img src="./images/logo-mysql.png" alt="logo" height="150"/>
 
-# Sidecar Backup Mysql
+# Sidecar Mysql
 
-## Automatic Mysql Backup on S3
+## Automatic Mysql Backup and upload on AWS S3 or Minio
 
-Example deploy on  ```deploy_sidecar_example/docker-compose.yml```
+Goland container to schedule and backup mysql database
+
+Examples deploy on  ```examples/```
 
 Copy `env.sample` as `.env`
 
 ENVIROMENT VARIABLE   | DESCRIPTION | Values
 ----------   | ---------- | --------------  
+TARGET_FOLDER_PREFIX | folder and prefix filename pattern on upload S3 | `dump_database/prefix_` 
+SCHEDULE | see below | `0 * * * * *` once per minute
+AWS_ACCESS_KEY_ID | Aws access key or Minio username | Access key string
+AWS_SECRET_ACCESS_KEY | Aws secret key or Minio password | Secret access key string
+AWS_DEFAULT_REGION | Aws default region or any value for minio | `eu-west-1` etc
+AWS_S3_TARGET_BUCKET | Aws bucket name or minio bucket name | `bucketname`
+MINIO_ENABLED | If target upload is a minio server | `true` or `false`
+MINIO_SSL | If minio is SSL | `true` or `false`
+MINIO_URL | Minio url | `http://localhost:9000` like
 MYSQL_HOST | hostname or ip server mysql | hostname or ip
+MYSQL_PORT | mysql port | `3306` or custom port
 MYSQL_DATABASE | database name | string
 MYSQL_USER | database user | string
 MYSQL_PASSWORD | database password | string
-MYSQL_SQL_FILENAME |  backup filename part | string
-MYSQL_ALL_DB | cycle all database and backups single file each | `true` or empty
-SCHEDULE | see below | 
-ZIP_FILE | true to enable tar.gz compression | `true` or empty
+MYSQL_ALL_DB | cycle all database and backups single file each | `true` or `false`
 CLEAN_DAYS | number of backup retention days | integer or empty
+CLEAN_FOLDER | folder prefix to clean | eg `dump_database/`
+
 
 ## Schedule
 
@@ -35,88 +46,31 @@ Day of week  | Yes        | 0-6 or SUN-SAT  | * / , - ?
 
 
 
-## Minio/S3 config
+# Usage, AWS Example
 
-ENVIROMENT VARIABLE   | DESCRIPTION | Values
-----------   | ---------- | --------------  
-S3_UPLOAD | Flag to enable s3 upload | `true` or empty
-S3_BUCKET | Bucket name | string
-S3_HOST | host:port | `host:port`
-S3_PROTOCOL | protocol type | `http` or `https`
-S3_KEY | key | string
-S3_SECRET | secret | string
-MINIO_PORT | local minio port to expose on host | port number
+Go to `examples/aws-s3/`
 
-# Usage
-
-Create `.env` file:
-
-```bash
-### db connection
-MYSQL_HOST=db
-MYSQL_DATABASE=wordpress
-MYSQL_USER=root
-MYSQL_PASSWORD=123456
-MYSQL_SQL_FILENAME=nomebackup
-### cron schedule
-SCHEDULE=0 * * * * *
-
-### PUT S3_UPLOAD to true to upload your dump on s3 or minio bucket
-S3_UPLOAD=true
-### S3 or minio host
-S3_HOST=minio:9000
-### Protocol
-S3_PROTOCOL=http
-### Your bucket name
-S3_BUCKET=cicciopollo
-### minio or s3 credentials
-S3_KEY=85A8U57ZITLSLFBYKNCG
-S3_SECRET=14MAuAetrv7y3E6zAuUOimXy5KYRqrZKw3cWuEe/
-### port of local minio
-MINIO_PORT=9000
-
-### ZIP FILE
-ZIP_FILE=true
-
-### ALL DB , true to enable
-MYSQL_ALL_DB=
-
-### Number of days to maintain backup history
-CLEAN_DAYS=15
-
-```
-
-Create `docker-compose.yml` file:
-
-```yml
-version: '2'
-services:
-  sidecar-backup-mysql:
-      image: nutellinoit/sidecar-backup-mysql:latest
-      volumes:
-          - ./dumpdb:/go/src/app/dumpdb
-      restart: always
-      environment:
-        - MYSQL_HOST=${MYSQL_HOST}
-        - MYSQL_DATABASE=${MYSQL_DATABASE}
-        - MYSQL_USER=${MYSQL_USER}
-        - MYSQL_PASSWORD=${MYSQL_PASSWORD}
-        - MYSQL_SQL_FILENAME=${MYSQL_SQL_FILENAME}
-        - SCHEDULE=${SCHEDULE}
-        - S3_UPLOAD=${S3_UPLOAD}
-        - S3_BUCKET=${S3_BUCKET}
-        - S3_KEY=${S3_KEY}
-        - S3_SECRET=${S3_SECRET}
-        - S3_HOST=${S3_HOST}
-        - S3_PROTOCOL=${S3_PROTOCOL}
-        - ZIP_FILE=${ZIP_FILE}
-        - MYSQL_ALL_DB=${MYSQL_ALL_DB}
-        - CLEAN_DAYS=${CLEAN_DAYS}
-
-```
+Create file `.env` and configure parameters
 
 Launch with
 
 ```bash
 docker-compose up -d
 ```
+
+
+# Usage, MINIO Example
+
+Go to `examples/minio/`
+
+Create file `.env` and configure parameters
+
+Launch with
+
+```bash
+docker-compose up -d
+```
+
+# Kubernetes Chart repository
+
+Go to [beeckup/charts](https://github.com/beeckup/charts) for kubernetes chart

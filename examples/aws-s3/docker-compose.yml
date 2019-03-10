@@ -1,0 +1,22 @@
+version: '2'
+services:
+  mysql-sidecar:
+    image: beeckup/mysql-sidecar:latest
+    volumes:
+      - ./tempdump:/go/src/app/tempdump
+    restart: always
+    environment:
+      - SCHEDULE=${SCHEDULE}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_S3_TARGET_BUCKET=${AWS_S3_TARGET_BUCKET}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
+      - TARGET_FOLDER_PREFIX=${TARGET_FOLDER_PREFIX}
+      - MYSQL_HOST=${MYSQL_HOST}
+      - MYSQL_PORT=${MYSQL_PORT}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_ALL_DB=${MYSQL_ALL_DB}
+      - CLEAN_DAYS=${CLEAN_DAYS}
+      - CLEAN_FOLDER=${CLEAN_FOLDER}
